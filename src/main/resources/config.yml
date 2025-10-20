@@ -1,0 +1,29 @@
+settings:
+  # Time in seconds before a player is marked as AFK
+  afk-time: 300
+  # Check for player movement
+  check-movement: true
+  # Check for mouse movement (head rotation)
+  check-mouse: true
+  # Check for jumping
+  check-jump: true
+  # Type of AFK marking (group/suffix)
+  afk-type: 'suffix'
+  # If afk-type is 'group', this is the group name to add
+  afk-group: 'afk'
+  # If afk-type is 'suffix', this is the suffix to add
+  afk-suffix: '&7[AFK]'
+  # Default state for AFK detection when players join
+  default-enabled: true
+  # Should the plugin automatically enable AFK detection for players with permission on join?
+  auto-enable-on-join: true
+  # Should the plugin remember player's last toggle state between server restarts?
+  remember-toggle-state: false
+
+messages:
+  no-permission: '&cYou don''t have permission to use this command!'
+  config-reloaded: '&aConfiguration has been reloaded!'
+  afk-enabled: '&aAuto AFK detection has been enabled!'
+  afk-disabled: '&cAuto AFK detection has been disabled!'
+  now-afk: '&7You are now AFK!'
+  no-longer-afk: '&7You are no longer AFK!'
