@@ -7,11 +7,13 @@ import java.util.UUID;
 
 public class PlayerData {
     private long lastActivity;
+    private long lastCheck;
     private boolean isAfk;
     private boolean enabled;
 
     public PlayerData(boolean enabled) {
         this.lastActivity = System.currentTimeMillis();
+        this.lastCheck = 0L;
         this.enabled = enabled;
         this.isAfk = false;
     }
@@ -22,6 +24,14 @@ public class PlayerData {
 
     public void setLastActivity(long lastActivity) {
         this.lastActivity = lastActivity;
+    }
+
+    public long getLastCheck() {
+        return lastCheck;
+    }
+
+    public void setLastCheck(long lastCheck) {
+        this.lastCheck = lastCheck;
     }
 
     public boolean isAfk() {

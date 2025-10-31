@@ -38,8 +38,11 @@ public class PlayerManager {
                 plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), 
                     "lp user " + player.getName() + " parent remove " + groupName);
             } else {
+                // Only remove the specific AFK suffix, not all meta
+                String suffix = plugin.getConfig().getString("settings.afk-suffix", "&7[AFK]")
+                        .replace("&", "§");
                 plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), 
-                    "lp user " + player.getName() + " meta clear");
+                    "lp user " + player.getName() + " meta removesuffix 0 " + suffix);
             }
         });
 
@@ -55,7 +58,14 @@ public class PlayerManager {
         PlayerData data = playerData.get(player.getUniqueId());
         if (data == null || !data.isEnabled()) return;
 
-        data.setLastActivity(System.currentTimeMillis());
+        long currentTime = System.currentTimeMillis();
+        data.setLastActivity(currentTime);
+        // Reset the check cooldown when player moves - this implements the 5-second delay
+        data.setLastCheck(currentTime);
+        
+        plugin.sendDebugMessage("Activity detected for " + player.getName() + 
+            " - check cooldown reset for " + plugin.getConfig().getLong("settings.check-cooldown", 5) + "s");
+        
         if (data.isAfk()) {
             setAfk(player, false);
         }
@@ -65,10 +75,28 @@ public class PlayerManager {
         if (!player.hasPermission("msnautoafk.use")) return;
 
         PlayerData data = playerData.get(player.getUniqueId());
-        if (data == null || !data.isEnabled()) return;
+        if (data == null || !data.isEnabled()) {
+            plugin.sendDebugMessage("Skipping " + player.getName() + " - AFK detection disabled");
+            return;
+        }
+
+        // Get the check cooldown from config (default 5 seconds)
+        long checkCooldown = plugin.getConfig().getLong("settings.check-cooldown", 5) * 1000;
+        long currentTime = System.currentTimeMillis();
+        
+        // Skip this check if we checked this player too recently
+        if (currentTime - data.getLastCheck() < checkCooldown) {
+            plugin.sendDebugMessage("Skipping " + player.getName() + " - checked recently (cooldown active)");
+            return;
+        }
+        
+        // Update the last check time
+        data.setLastCheck(currentTime);
+        plugin.sendDebugMessage("Checking AFK status for " + player.getName() + 
+            " - idle for " + ((currentTime - data.getLastActivity()) / 1000) + "s");
 
         long afkTime = plugin.getConfig().getLong("settings.afk-time") * 1000;
-        if (!data.isAfk() && System.currentTimeMillis() - data.getLastActivity() >= afkTime) {
+        if (!data.isAfk() && currentTime - data.getLastActivity() >= afkTime) {
             setAfk(player, true);
         }
     }
@@ -100,8 +128,9 @@ public class PlayerManager {
                     plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), 
                         "lp user " + player.getName() + " meta setsuffix 0 " + suffix);
                 } else {
+                    // Only remove the specific AFK suffix
                     plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), 
-                        "lp user " + player.getName() + " meta clear");
+                        "lp user " + player.getName() + " meta removesuffix 0 " + suffix);
                 }
             }
         });
@@ -141,5 +170,14 @@ public class PlayerManager {
             PlayerData.savePlayerState(plugin, player.getUniqueId(), data.isEnabled());
         }
         playerData.remove(player.getUniqueId());
+    }
+    
+    public PlayerData getPlayerData(UUID uuid) {
+        return playerData.get(uuid);
+    }
+    
+    public boolean isPlayerTrackingEnabled(Player player) {
+        PlayerData data = playerData.get(player.getUniqueId());
+        return data != null && data.isEnabled();
     }
 }

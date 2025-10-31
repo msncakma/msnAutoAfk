@@ -22,3 +22,6 @@ permissions:
   msnautoafk.debug:
     description: Allows the player to toggle debug messages
     default: op
+  msnautoafk.updatenotify:
+    description: Receive notifications about plugin updates
+    default: op

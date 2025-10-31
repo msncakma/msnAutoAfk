@@ -9,6 +9,7 @@ import java.util.UUID;
 
 public final class AutoAfk extends JavaPlugin {
     private PlayerManager playerManager;
+    private UpdateChecker updateChecker;
     private final Set<UUID> debugPlayers = new HashSet<>();
 
     @Override
@@ -18,6 +19,9 @@ public final class AutoAfk extends JavaPlugin {
 
         // Initialize PlayerManager
         playerManager = new PlayerManager(this);
+        
+        // Initialize UpdateChecker
+        updateChecker = new UpdateChecker(this);
         
         // Clear any leftover AFK states
         getServer().getOnlinePlayers().forEach(player -> 
@@ -31,6 +35,11 @@ public final class AutoAfk extends JavaPlugin {
 
         // Start AFK checker task
         startAfkChecker();
+        
+        // Check for updates
+        if (getConfig().getBoolean("settings.check-updates", true)) {
+            updateChecker.checkForUpdates();
+        }
 
         getLogger().info("AutoAfk plugin has been enabled!");
     }
@@ -48,10 +57,20 @@ public final class AutoAfk extends JavaPlugin {
         // Check every 5 seconds (100 ticks)
         Bukkit.getServer().getGlobalRegionScheduler().runAtFixedRate(this, (task) -> {
             Bukkit.getOnlinePlayers().forEach(player -> {
+                // Only check players with permission
+                if (!player.hasPermission("msnautoafk.use")) {
+                    return;
+                }
+                
+                // Check if player has AFK detection enabled before scheduling
+                PlayerData data = playerManager.getPlayerData(player.getUniqueId());
+                if (data == null || !data.isEnabled()) {
+                    return;
+                }
+                
                 // Schedule the AFK check in the player's region
                 player.getScheduler().run(this, (scheduledTask) -> {
                     playerManager.checkAfkStatus(player);
-                    sendDebugMessage("Checking AFK status for " + player.getName());
                 }, null);
             });
         }, 20L, 100L);
@@ -59,6 +78,10 @@ public final class AutoAfk extends JavaPlugin {
 
     public PlayerManager getPlayerManager() {
         return playerManager;
+    }
+    
+    public UpdateChecker getUpdateChecker() {
+        return updateChecker;
     }
 
     public void toggleDebug(UUID playerId) {

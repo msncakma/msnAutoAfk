@@ -1,6 +1,10 @@
 settings:
   # Time in seconds before a player is marked as AFK
   afk-time: 300
+  # How often to check each player's AFK status (in seconds)
+  # Lower values = more responsive but uses more resources
+  # Higher values = less responsive but more efficient
+  check-cooldown: 5
   # Check for player movement
   check-movement: true
   # Check for mouse movement (head rotation)
@@ -18,7 +22,9 @@ settings:
   # Should the plugin automatically enable AFK detection for players with permission on join?
   auto-enable-on-join: true
   # Should the plugin remember player's last toggle state between server restarts?
-  remember-toggle-state: false
+  remember-toggle-state: true
+  # Check for plugin updates on startup (GitHub releases)
+  check-updates: true
 
 messages:
   no-permission: '&cYou don''t have permission to use this command!'

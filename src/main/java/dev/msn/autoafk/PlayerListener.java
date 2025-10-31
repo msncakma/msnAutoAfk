@@ -21,6 +21,13 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
+        
+        // Early permission check to avoid unnecessary processing
+        if (!player.hasPermission("msnautoafk.use")) return;
+        
+        // Check if player has AFK detection enabled
+        if (!plugin.getPlayerManager().isPlayerTrackingEnabled(player)) return;
+        
         if (!plugin.getConfig().getBoolean("settings.check-movement", true)) return;
 
         if (event.getTo() != null && event.getFrom() != null) {
@@ -54,6 +61,11 @@ public class PlayerListener implements Listener {
         plugin.sendDebugMessage("Player joined: " + player.getName());
         plugin.getPlayerManager().initializePlayer(player);
         plugin.getPlayerManager().updatePlayerActivity(player);
+        
+        // Notify ops/admins about updates
+        if (player.hasPermission("msnautoafk.updatenotify") && plugin.getUpdateChecker().isUpdateAvailable()) {
+            plugin.getUpdateChecker().notifyPlayer(player);
+        }
     }
 
     @EventHandler
@@ -64,17 +76,32 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        plugin.getPlayerManager().updatePlayerActivity(event.getPlayer());
+        Player player = event.getPlayer();
+        // Early permission check
+        if (!player.hasPermission("msnautoafk.use")) return;
+        // Check if player has AFK detection enabled
+        if (!plugin.getPlayerManager().isPlayerTrackingEnabled(player)) return;
+        plugin.getPlayerManager().updatePlayerActivity(player);
     }
 
     @EventHandler
     public void onPlayerCommand(PlayerCommandPreprocessEvent event) {
-        plugin.getPlayerManager().updatePlayerActivity(event.getPlayer());
+        Player player = event.getPlayer();
+        // Early permission check
+        if (!player.hasPermission("msnautoafk.use")) return;
+        // Check if player has AFK detection enabled
+        if (!plugin.getPlayerManager().isPlayerTrackingEnabled(player)) return;
+        plugin.getPlayerManager().updatePlayerActivity(player);
     }
 
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
+        // Early permission check
+        if (!player.hasPermission("msnautoafk.use")) return;
+        // Check if player has AFK detection enabled
+        if (!plugin.getPlayerManager().isPlayerTrackingEnabled(player)) return;
+        
         // Schedule in player's region since this is an async event
         player.getScheduler().run(plugin, (task) -> 
             plugin.getPlayerManager().updatePlayerActivity(player), 
